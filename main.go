@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/pterm/pterm"
 	"log"
 	"os"
 	"slices"
 	"strings"
+	"time"
+
+	"github.com/pterm/pterm"
 
 	"github.com/bitfield/script"
 )
@@ -17,7 +19,6 @@ func main() {
 	logger.Info("Server Watchdog")
 
 	whitelistedIps := []string{}
-	unknownIps := []string{}
 
 	if _, err := os.Stat("whitelist.json"); err != nil {
 		os.WriteFile("whitelist.json", []byte("[]"), 0755)
@@ -33,27 +34,36 @@ func main() {
 
 	logger.Info("White Listed ", logger.Args("IPs", strings.Join(whitelistedIps, ",")))
 
-	tnp, err := script.Exec("ss -tnp").Match(":22").String()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	area, _ := pterm.DefaultArea.Start()
 
-	for line := range strings.SplitSeq(tnp, "\n") {
-		ip, err := script.Echo(line).Column(5).String()
+	for range time.Tick(time.Second * 1) {
+
+		unknownIps := []string{}
+
+		tnp, err := script.Exec("ss -tnp").Match(":22").String()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		host := strings.Split(ip, ":")[0]
+		for line := range strings.SplitSeq(tnp, "\n") {
+			ip, err := script.Echo(line).Column(5).String()
+			if err != nil {
+				log.Fatalln(err)
+			}
 
-		if !slices.Contains(whitelistedIps, host) {
-			unknownIps = append(unknownIps, host)
+			host := strings.Split(ip, ":")[0]
+
+			if !slices.Contains(whitelistedIps, host) && !slices.Contains(unknownIps, host) {
+				unknownIps = append(unknownIps, host)
+			}
 		}
-	}
 
-	if len(unknownIps) > 0 {
+		if len(unknownIps) > 0 {
 
-		logger.Error("Unknown ", logger.Args("IPs", strings.Join(unknownIps, ",")))
+			txt := pterm.Sprintf("Unknown IPs: %v", strings.Join(unknownIps, ","))
+			area.Update(txt)
+
+		}
 	}
 
 }
