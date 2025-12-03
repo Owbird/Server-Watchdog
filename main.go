@@ -38,7 +38,7 @@ func main() {
 
 	for range time.Tick(time.Second * 1) {
 
-		unknownIps := []string{}
+		unknownSShAttempts := []string{}
 
 		tnp, err := script.Exec("ss -tnp").Match(":22").String()
 		if err != nil {
@@ -53,14 +53,14 @@ func main() {
 
 			host := strings.Split(ip, ":")[0]
 
-			if !slices.Contains(whitelistedIps, host) && !slices.Contains(unknownIps, host) {
-				unknownIps = append(unknownIps, host)
+			if !slices.Contains(whitelistedIps, host) && !slices.Contains(unknownSShAttempts, host) {
+				unknownSShAttempts = append(unknownSShAttempts, host)
 			}
 		}
 
-		if len(unknownIps) > 0 {
+		if len(unknownSShAttempts) > 0 {
 
-			txt := "Unknown IPs: " + pterm.Error.Sprint(strings.Join(unknownIps, ", "))
+			txt := "Unknown attempts: " + pterm.Error.Sprint(strings.Join(unknownSShAttempts, ", "))
 			area.Update(txt)
 
 		}
