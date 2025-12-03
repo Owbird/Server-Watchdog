@@ -60,7 +60,7 @@ func main() {
 
 		if len(unknownIps) > 0 {
 
-			txt := pterm.Sprintf("Unknown IPs: %v", strings.Join(unknownIps, ","))
+			txt := "Unknown IPs: " + pterm.Error.Sprint(strings.Join(unknownIps, ", "))
 			area.Update(txt)
 
 		}
