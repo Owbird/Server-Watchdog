@@ -8,18 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pterm/pterm"
-
 	"github.com/bitfield/script"
+	"github.com/pterm/pterm"
 )
 
 func main() {
-	logger := pterm.DefaultLogger.WithLevel(pterm.LogLevelTrace)
-
-	logger.Info("Server Watchdog")
+	logger := pterm.DefaultLogger.WithLevel(pterm.LogLevelInfo)
+	logger.Info("Server Watchdog Starting")
 
 	whitelistedIps := []string{}
-
 	if _, err := os.Stat("whitelist.json"); err != nil {
 		os.WriteFile("whitelist.json", []byte("[]"), 0755)
 	} else {
@@ -27,43 +24,80 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-
 		json.Unmarshal(data, &whitelistedIps)
-
 	}
 
-	logger.Info("White Listed ", logger.Args("IPs", strings.Join(whitelistedIps, ",")))
-
-	area, _ := pterm.DefaultArea.Start()
+	area, _ := pterm.DefaultArea.WithCenter().Start()
 
 	for range time.Tick(time.Second * 1) {
 
 		unknownSShAttempts := []string{}
 
 		tnp, err := script.Exec("ss -tnp").Match(":22").String()
+
 		if err != nil {
 			log.Fatalln(err)
 		}
 
 		for line := range strings.SplitSeq(tnp, "\n") {
+			if len(strings.TrimSpace(line)) == 0 {
+				continue
+			}
+
 			ip, err := script.Echo(line).Column(5).String()
 			if err != nil {
-				log.Fatalln(err)
+				continue
 			}
 
 			host := strings.Split(ip, ":")[0]
 
-			if !slices.Contains(whitelistedIps, host) && !slices.Contains(unknownSShAttempts, host) {
+			if host != "" &&
+				!slices.Contains(whitelistedIps, host) &&
+				!slices.Contains(unknownSShAttempts, host) {
 				unknownSShAttempts = append(unknownSShAttempts, host)
 			}
 		}
 
-		if len(unknownSShAttempts) > 0 {
 
-			txt := "Unknown attempts: " + pterm.Error.Sprint(strings.Join(unknownSShAttempts, ", "))
-			area.Update(txt)
+		header := pterm.DefaultHeader.
+			Sprint("🛡️  SERVER WATCHDOG — LIVE STATUS")
 
+		unknownList := ""
+		if len(unknownSShAttempts) == 0 {
+			unknownList = pterm.Success.Sprint("No unknown attempts detected")
+		} else {
+			for _, ip := range unknownSShAttempts {
+				unknownList += pterm.Error.Sprint("❌ ", ip) + "\n"
+			}
 		}
-	}
 
+		unknownBox := pterm.DefaultBox.
+			WithTitle("SSH MONITOR").
+			Sprint(unknownList)
+
+		whitelistList := ""
+		if len(whitelistedIps) == 0 {
+			whitelistList = pterm.Warning.Sprint("No whitelisted IPs")
+		} else {
+			for _, ip := range whitelistedIps {
+				whitelistList += pterm.Success.Sprint("✔ ", ip) + "\n"
+			}
+		}
+
+		whitelistBox := pterm.DefaultBox.
+			WithTitle("WHITELIST").
+			Sprint(whitelistList)
+
+		timestamp := pterm.FgLightBlue.Sprintf("Last Updated: %s",
+			time.Now().Format("15:04:05"))
+
+		ui := header + "\n\n" +
+			unknownBox + "\n\n" +
+			whitelistBox + "\n\n" +
+			timestamp + "\n"
+
+
+		area.Update(ui)
+
+	}
 }
