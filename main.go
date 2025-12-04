@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"slices"
@@ -12,11 +13,18 @@ import (
 	"github.com/pterm/pterm"
 )
 
+type PastSSHAttempt struct {
+	IP   string
+	Time time.Time
+}
+
 func main() {
 	logger := pterm.DefaultLogger.WithLevel(pterm.LogLevelInfo)
 	logger.Info("Server Watchdog Starting")
 
 	whitelistedIps := []string{}
+	pastSSHAttempts := []PastSSHAttempt{}
+
 	if _, err := os.Stat("whitelist.json"); err != nil {
 		os.WriteFile("whitelist.json", []byte("[]"), 0755)
 	} else {
@@ -31,7 +39,7 @@ func main() {
 
 	for range time.Tick(time.Second * 1) {
 
-		unknownSShAttempts := []string{}
+		unknownSSHAttempts := []string{}
 
 		tnp, err := script.Exec("ss -tnp").Match(":22").String()
 
@@ -51,28 +59,53 @@ func main() {
 
 			host := strings.Split(ip, ":")[0]
 
-			if host != "" &&
-				!slices.Contains(whitelistedIps, host) &&
-				!slices.Contains(unknownSShAttempts, host) {
-				unknownSShAttempts = append(unknownSShAttempts, host)
-			}
-		}
+			if host != "" && !slices.Contains(whitelistedIps, host) {
+				if !slices.Contains(unknownSSHAttempts, host) {
+					unknownSSHAttempts = append(unknownSSHAttempts, host)
+				}
 
+				found := false
+
+				for _, atmpt := range pastSSHAttempts {
+
+					if atmpt.IP == host {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					pastSSHAttempts = append(pastSSHAttempts, PastSSHAttempt{
+						IP:   host,
+						Time: time.Now(),
+					})
+				}
+
+			}
+
+		}
 
 		header := pterm.DefaultHeader.
 			Sprint("🛡️  SERVER WATCHDOG — LIVE STATUS")
 
 		unknownList := ""
-		if len(unknownSShAttempts) == 0 {
+		if len(unknownSSHAttempts) == 0 {
 			unknownList = pterm.Success.Sprint("No unknown attempts detected")
 		} else {
-			for _, ip := range unknownSShAttempts {
-				unknownList += pterm.Error.Sprint("❌ ", ip) + "\n"
+			for _, ip := range unknownSSHAttempts {
+				unknownList += pterm.Red("[NOW] ", ip) + "\n"
 			}
+
+			for _, attempt := range pastSSHAttempts {
+				if !slices.Contains(unknownSSHAttempts, attempt.IP) {
+					unknownList += pterm.Yellow(fmt.Sprintf("[Last seen: %v] ", attempt.Time.Format("15:04:05")), attempt.IP) + "\n"
+				}
+			}
+
 		}
 
 		unknownBox := pterm.DefaultBox.
-			WithTitle("SSH MONITOR").
+			WithTitle("SSH MONITOR (Live)").
 			Sprint(unknownList)
 
 		whitelistList := ""
@@ -94,10 +127,10 @@ func main() {
 		ui := header + "\n\n" +
 			unknownBox + "\n\n" +
 			whitelistBox + "\n\n" +
-			timestamp + "\n"
-
+			timestamp
 
 		area.Update(ui)
 
 	}
 }
+
