@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,26 +88,6 @@ func main() {
 		header := pterm.DefaultHeader.
 			Sprint("🛡️  SERVER WATCHDOG — LIVE STATUS")
 
-		unknownList := ""
-		if len(unknownSSHAttempts) == 0 {
-			unknownList = pterm.Success.Sprint("No unknown attempts detected")
-		} else {
-			for _, ip := range unknownSSHAttempts {
-				unknownList += pterm.Red("[NOW] ", ip) + "\n"
-			}
-
-			for _, attempt := range pastSSHAttempts {
-				if !slices.Contains(unknownSSHAttempts, attempt.IP) {
-					unknownList += pterm.Yellow(fmt.Sprintf("[Last seen: %v] ", attempt.Time.Format("15:04:05")), attempt.IP) + "\n"
-				}
-			}
-
-		}
-
-		unknownBox := pterm.DefaultBox.
-			WithTitle("SSH MONITOR (Live)").
-			Sprint(unknownList)
-
 		whitelistList := ""
 		if len(whitelistedIps) == 0 {
 			whitelistList = pterm.Warning.Sprint("No whitelisted IPs")
@@ -124,13 +104,33 @@ func main() {
 		timestamp := pterm.FgLightBlue.Sprintf("Last Updated: %s",
 			time.Now().Format("15:04:05"))
 
-		ui := header + "\n\n" +
-			unknownBox + "\n\n" +
+		tableData := pterm.TableData{
+			{"#", "IP", "Last seen"},
+		}
+
+		for idx, ip := range unknownSSHAttempts {
+			tableData = append(tableData, []string{strconv.Itoa(idx + 1), ip, "NOW"})
+		}
+
+		for _, attempt := range pastSSHAttempts {
+			if !slices.Contains(unknownSSHAttempts, attempt.IP) {
+				count := len(tableData)
+				tableData = append(tableData, []string{strconv.Itoa(count), attempt.IP, attempt.Time.Format("15:04:05")})
+			}
+		}
+
+		table, err := pterm.DefaultTable.WithHasHeader().WithBoxed().WithData(tableData).Srender()
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		ui := header + "\n" +
+			timestamp + "\n\n" +
 			whitelistBox + "\n\n" +
-			timestamp
+			table
 
 		area.Update(ui)
 
 	}
 }
-
