@@ -80,6 +80,7 @@ func GetActivities() (Activities, error) {
 					sshAttempts[i].Count += 1
 				}
 				sshAttempts[i].Status = "LIVE"
+				sshAttempts[i].Time = time.Now()
 				break
 			}
 		}
