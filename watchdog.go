@@ -63,10 +63,13 @@ func GetActivities() (Activities, error) {
 
 			found := false
 
-			for _, atmpt := range pastSSHAttempts {
+			for idx, atmpt := range pastSSHAttempts {
 
 				if atmpt.IP == host {
 					found = true
+
+					pastSSHAttempts[idx].Time = time.Now()
+
 					break
 				}
 			}
