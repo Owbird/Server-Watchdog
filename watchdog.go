@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -91,6 +92,16 @@ func GetActivities() (Activities, error) {
 			})
 		}
 	}
+
+	sort.Slice(sshAttempts, func(i, j int) bool {
+		if sshAttempts[i].Status == "LIVE" && sshAttempts[j].Status != "LIVE" {
+			return true
+		}
+		if sshAttempts[j].Status == "LIVE" && sshAttempts[i].Status != "LIVE" {
+			return false
+		}
+		return sshAttempts[i].Count > sshAttempts[j].Count
+	})
 
 	return Activities{
 		WhitelistedIPs: whitelistedIps,
