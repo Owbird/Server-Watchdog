@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"slices"
 	"strconv"
 	"time"
 
@@ -42,31 +41,19 @@ func main() {
 			time.Now().Format("15:04:05"))
 
 		tableData := pterm.TableData{
-			{"#", "IP", "Last seen", "Country"},
+			{"#", "IP", "Status","Last seen", "Country", "Attempts"},
 		}
 
-		for idx, ip := range activities.LiveAttempts {
+		for idx, attempt := range activities.Attempts {
+
 			country := "N/A"
-			if origin, ok := activities.IPOrigins[ip]; ok {
+			if origin, ok := activities.IPOrigins[attempt.IP]; ok {
+
 				country = origin.Country
-
 			}
 
-			tableData = append(tableData, []string{strconv.Itoa(idx + 1), ip, "NOW", country})
-		}
-
-		for _, attempt := range activities.PastAttempts {
-			if !slices.Contains(activities.LiveAttempts, attempt.IP) {
-				count := len(tableData)
-
-				country := "N/A"
-				if origin, ok := activities.IPOrigins[attempt.IP]; ok {
-
-					country = origin.Country
-				}
-
-				tableData = append(tableData, []string{strconv.Itoa(count), attempt.IP, attempt.Time.Format("15:04:05"), country})
-			}
+			tableRow := []string{strconv.Itoa(idx + 1), attempt.IP,attempt.Status, attempt.Time.Format("15:04:05"), country, strconv.Itoa(attempt.Count)}
+			tableData = append(tableData, tableRow)
 		}
 
 		table, err := pterm.DefaultTable.WithHasHeader().WithBoxed().WithData(tableData).Srender()

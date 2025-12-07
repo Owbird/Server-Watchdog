@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	pastSSHAttempts = []PastSSHAttempt{}
-	ipToOrigin      = make(IPOrigins)
+	sshAttempts = []SSHAttempt{}
+	ipToOrigin  = make(IPOrigins)
 )
 
 func GetActivities() (Activities, error) {
 	whitelistedIps := []string{}
+	liveSSHAttempts := []string{}
 
 	if _, err := os.Stat("whitelist.json"); err != nil {
 		os.WriteFile("whitelist.json", []byte("[]"), 0755)
@@ -27,8 +28,6 @@ func GetActivities() (Activities, error) {
 		}
 		json.Unmarshal(data, &whitelistedIps)
 	}
-
-	liveSSHAttempts := []string{}
 
 	tnp, err := script.Exec("ss -tnp").Match(":22").String()
 
@@ -61,34 +60,41 @@ func GetActivities() (Activities, error) {
 				liveSSHAttempts = append(liveSSHAttempts, host)
 			}
 
-			found := false
-
-			for idx, atmpt := range pastSSHAttempts {
-
-				if atmpt.IP == host {
-					found = true
-
-					pastSSHAttempts[idx].Time = time.Now()
-
-					break
-				}
-			}
-
-			if !found {
-				pastSSHAttempts = append(pastSSHAttempts, PastSSHAttempt{
-					IP:   host,
-					Time: time.Now(),
-				})
-			}
-
 		}
 
 	}
 
+	for i := range sshAttempts {
+		if !slices.Contains(liveSSHAttempts, sshAttempts[i].IP) {
+			sshAttempts[i].Status = "NIL"
+		}
+	}
+
+	for _, host := range liveSSHAttempts {
+		exists := false
+		for i := range sshAttempts {
+			if sshAttempts[i].IP == host {
+				exists = true
+				if sshAttempts[i].Status != "LIVE" {
+					sshAttempts[i].Count += 1
+				}
+				sshAttempts[i].Status = "LIVE"
+				break
+			}
+		}
+		if !exists {
+			sshAttempts = append(sshAttempts, SSHAttempt{
+				IP:     host,
+				Time:   time.Now(),
+				Count:  1,
+				Status: "LIVE",
+			})
+		}
+	}
+
 	return Activities{
 		WhitelistedIPs: whitelistedIps,
-		LiveAttempts:   liveSSHAttempts,
-		PastAttempts:   pastSSHAttempts,
+		Attempts:       sshAttempts,
 		IPOrigins:      ipToOrigin,
 	}, nil
 

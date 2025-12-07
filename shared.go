@@ -4,15 +4,16 @@ import "time"
 
 type IPOrigins map[string]IPStat
 
-type PastSSHAttempt struct {
-	IP   string
-	Time time.Time
+type SSHAttempt struct {
+	IP     string
+	Time   time.Time
+	Count  int
+	Status string
 }
 
 type Activities struct {
 	WhitelistedIPs []string
-	LiveAttempts   []string
-	PastAttempts   []PastSSHAttempt
+	Attempts       []SSHAttempt
 	IPOrigins      IPOrigins
 }
 
