@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"time"
 
 	"github.com/pterm/pterm"
+	"github.com/xeonx/timeago"
 )
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 			time.Now().Format("15:04:05"))
 
 		tableData := pterm.TableData{
-			{"#", "IP", "Status","Last seen", "Country", "Attempts"},
+			{"#", "IP", "Status", "Last seen", "Country", "Attempts"},
 		}
 
 		for idx, attempt := range activities.Attempts {
@@ -52,7 +54,17 @@ func main() {
 				country = origin.Country
 			}
 
-			tableRow := []string{strconv.Itoa(idx + 1), attempt.IP,attempt.Status, attempt.Time.Format("15:04:05"), country, strconv.Itoa(attempt.Count)}
+			fmtedTime := ""
+			if attempt.Status == "LIVE" {
+
+				fmtedTime = "NOW"
+			} else {
+
+				fmtedTime = fmt.Sprintf("%v (%v)", attempt.Time.Format("15:04:05"), timeago.English.Format(attempt.Time))
+
+			}
+
+			tableRow := []string{strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, strconv.Itoa(attempt.Count)}
 			tableData = append(tableData, tableRow)
 		}
 
