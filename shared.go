@@ -2,6 +2,11 @@ package main
 
 import "time"
 
+const (
+	LIVE  = "LIVE"
+	STALE = "NIL"
+)
+
 type IPOrigins map[string]IPStat
 
 type AttemptSession struct {

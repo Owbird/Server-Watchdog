@@ -67,13 +67,13 @@ func GetActivities() (Activities, error) {
 
 	for i := range sshAttempts {
 		if !slices.Contains(liveSSHAttempts, sshAttempts[i].IP) {
-			if sshAttempts[i].Status == "LIVE" {
+			if sshAttempts[i].Status == LIVE {
 				totalSessions := len(sshAttempts[i].Sessions)
 				if totalSessions > 0 {
 					sshAttempts[i].Sessions[totalSessions-1].End = time.Now()
 				}
 			}
-			sshAttempts[i].Status = "NIL"
+			sshAttempts[i].Status = STALE
 		}
 	}
 
@@ -82,14 +82,13 @@ func GetActivities() (Activities, error) {
 		for i := range sshAttempts {
 			if sshAttempts[i].IP == host {
 				exists = true
-				if sshAttempts[i].Status != "LIVE" {
-
+									if sshAttempts[i].Status != LIVE {
 					sshAttempts[i].Sessions = append(sshAttempts[i].Sessions, AttemptSession{
 						Start: time.Now(),
 					})
 
 				}
-				sshAttempts[i].Status = "LIVE"
+				sshAttempts[i].Status = LIVE
 				break
 			}
 		}
@@ -100,16 +99,16 @@ func GetActivities() (Activities, error) {
 					{
 						Start: time.Now(),
 					}},
-				Status: "LIVE",
+				Status: LIVE,
 			})
 		}
 	}
 
 	sort.Slice(sshAttempts, func(i, j int) bool {
-		if sshAttempts[i].Status == "LIVE" && sshAttempts[j].Status != "LIVE" {
+		if sshAttempts[i].Status == LIVE && sshAttempts[j].Status != LIVE {
 			return true
 		}
-		if sshAttempts[j].Status == "LIVE" && sshAttempts[i].Status != "LIVE" {
+		if sshAttempts[j].Status == LIVE && sshAttempts[i].Status != LIVE {
 			return false
 		}
 		return len(sshAttempts[i].Sessions) > len(sshAttempts[j].Sessions)

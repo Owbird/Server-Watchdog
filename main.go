@@ -54,7 +54,7 @@ func main() {
 			}
 
 			fmtedTime := ""
-			if attempt.Status == "LIVE" {
+			if attempt.Status == LIVE {
 
 				fmtedTime = "NOW"
 			} else {
