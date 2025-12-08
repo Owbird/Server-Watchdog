@@ -4,11 +4,15 @@ import "time"
 
 type IPOrigins map[string]IPStat
 
+type AttemptSession struct {
+	Start time.Time
+	End   time.Time
+}
+
 type SSHAttempt struct {
-	IP     string
-	Time   time.Time
-	Count  int
-	Status string
+	IP       string
+	Status   string
+	Sessions []AttemptSession
 }
 
 type Activities struct {

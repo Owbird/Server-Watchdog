@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -60,11 +59,12 @@ func main() {
 				fmtedTime = "NOW"
 			} else {
 
-				fmtedTime = fmt.Sprintf("%v (%v)", attempt.Time.Format("15:04:05"), timeago.English.Format(attempt.Time))
+				lastSession := attempt.Sessions[len(attempt.Sessions)-1]
+				fmtedTime = timeago.English.Format(lastSession.End)
 
 			}
 
-			tableRow := []string{strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, strconv.Itoa(attempt.Count)}
+			tableRow := []string{strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, strconv.Itoa(len(attempt.Sessions))}
 			tableData = append(tableData, tableRow)
 		}
 
