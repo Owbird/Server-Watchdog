@@ -48,7 +48,7 @@ func GetActivities() (Activities, error) {
 
 		host := strings.Split(ip, ":")[0]
 
-		if host != "" && !slices.Contains(whitelistedIps, host) {
+		if host != "" && !slices.Contains(whitelistedIps, host) && !strings.Contains(host, "[") {
 			if _, exists := ipToOrigin[host]; !exists {
 				stat, err := GetCountryOrigin(host)
 				if err == nil {
