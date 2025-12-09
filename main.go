@@ -64,7 +64,11 @@ func main() {
 
 			}
 
-			tableRow := []string{strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, strconv.Itoa(len(attempt.Sessions))}
+			r, g, b := GetWarmth(attempt.Sessions)
+
+			tableRow := RGBify(r, g, b, []string{
+				strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, strconv.Itoa(len(attempt.Sessions)),
+			})
 			tableData = append(tableData, tableRow)
 		}
 
