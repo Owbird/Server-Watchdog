@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	sshAttempts = []SSHAttempt{}
+	sshAttempts = LoadAttempts() 
 	ipToOrigin  = make(IPOrigins)
 )
 
@@ -82,7 +82,7 @@ func GetActivities() (Activities, error) {
 		for i := range sshAttempts {
 			if sshAttempts[i].IP == host {
 				exists = true
-									if sshAttempts[i].Status != LIVE {
+				if sshAttempts[i].Status != LIVE {
 					sshAttempts[i].Sessions = append(sshAttempts[i].Sessions, AttemptSession{
 						Start: time.Now(),
 					})
@@ -113,6 +113,9 @@ func GetActivities() (Activities, error) {
 		}
 		return len(sshAttempts[i].Sessions) > len(sshAttempts[j].Sessions)
 	})
+
+
+	SaveAttemts(sshAttempts)
 
 	return Activities{
 		WhitelistedIPs: whitelistedIps,

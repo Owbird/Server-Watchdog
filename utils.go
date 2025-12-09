@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/pterm/pterm"
 	"strings"
+
+	"github.com/pterm/pterm"
 )
 
 func GetCountryOrigin(ip string) (IPStat, error) {
@@ -111,4 +113,37 @@ func FormatDuration(totalSeconds int) string {
 	}
 
 	return strings.Join(parts, " ")
+}
+
+func SaveAttemts(attempts []SSHAttempt) error {
+
+	toSave := []SSHAttempt{}
+
+	for _, attempt := range attempts {
+		if attempt.Status != LIVE {
+			toSave = append(toSave, attempt)
+		}
+
+	}
+
+	data, err := json.MarshalIndent(toSave, "", "  ")
+	if err != nil {
+
+		return err
+	}
+
+	os.WriteFile("ssh-attempts.json", data, 0755)
+
+	return nil
+
+}
+
+func LoadAttempts() []SSHAttempt {
+	data, err := os.ReadFile("ssh-attempts.json")
+	if err != nil {
+		return []SSHAttempt{}
+	}
+	var attempts []SSHAttempt
+	json.Unmarshal(data, &attempts)
+	return attempts
 }

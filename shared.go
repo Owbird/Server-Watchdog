@@ -10,35 +10,35 @@ const (
 type IPOrigins map[string]IPStat
 
 type AttemptSession struct {
-	Start time.Time
-	End   time.Time
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
 }
 
 type SSHAttempt struct {
-	IP       string
-	Status   string
-	Sessions []AttemptSession
+	IP       string           `json:"ip"`
+	Status   string           `json:"status"`
+	Sessions []AttemptSession `json:"sessions"`
 }
 
 type Activities struct {
-	WhitelistedIPs []string
-	Attempts       []SSHAttempt
-	IPOrigins      IPOrigins
+	WhitelistedIPs []string    `json:"whitelistedIPs"`
+	Attempts       []SSHAttempt `json:"attempts"`
+	IPOrigins      IPOrigins   `json:"ipOrigins"`
 }
 
 type IPStat struct {
-	Query       string
-	Status      string
-	Country     string
-	CountryCode string
-	Region      string
-	RegionName  string
-	City        string
-	Zip         string
-	Lat         float64
-	Lon         float64
-	Timezone    string
-	Isp         string
-	Org         string
-	As          string
+	Query       string  `json:"query,omitempty"`
+	Status      string  `json:"status,omitempty"`
+	Country     string  `json:"country,omitempty"`
+	CountryCode string  `json:"countryCode,omitempty"`
+	Region      string  `json:"region,omitempty"`
+	RegionName  string  `json:"regionName,omitempty"`
+	City        string  `json:"city,omitempty"`
+	Zip         string  `json:"zip,omitempty"`
+	Lat         float64 `json:"lat"`
+	Lon         float64 `json:"lon"`
+	Timezone    string  `json:"timezone,omitempty"`
+	Isp         string  `json:"isp,omitempty"`
+	Org         string  `json:"org,omitempty"`
+	As          string  `json:"as,omitempty"`
 }
