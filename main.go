@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -42,7 +43,7 @@ func main() {
 			time.Now().Format("15:04:05"))
 
 		tableData := pterm.TableData{
-			{"#", "IP", "Status", "Last seen", "Country", "Attempts"},
+			{"#", "IP", "Status", "Last seen", "Country", "Sessions"},
 		}
 
 		for idx, attempt := range activities.Attempts {
@@ -66,8 +67,10 @@ func main() {
 
 			r, g, b := GetWarmth(attempt.Sessions)
 
+			sessionsString := fmt.Sprintf("%v attempts (%v)", strconv.Itoa(len(attempt.Sessions)), FormatDuration(GetTotalDuration(attempt.Sessions)))
+
 			tableRow := RGBify(r, g, b, []string{
-				strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, strconv.Itoa(len(attempt.Sessions)),
+				strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, sessionsString,
 			})
 			tableData = append(tableData, tableRow)
 		}

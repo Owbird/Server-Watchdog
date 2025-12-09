@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pterm/pterm"
+	"strings"
 )
 
 func GetCountryOrigin(ip string) (IPStat, error) {
@@ -29,12 +30,8 @@ func GetCountryOrigin(ip string) (IPStat, error) {
 
 }
 
-func GetWarmth(sessions []AttemptSession) (uint8, uint8, uint8) {
-	if len(sessions) == 0 {
-		return 0, 0, 0
-	}
-
-	totalSeconds := 0.0
+func GetTotalDuration(sessions []AttemptSession) int {
+	totalSeconds := 0
 
 	for _, session := range sessions {
 		var dur float64
@@ -46,8 +43,18 @@ func GetWarmth(sessions []AttemptSession) (uint8, uint8, uint8) {
 		if dur < 0 {
 			dur = 0
 		}
-		totalSeconds += dur
+		totalSeconds += int(dur)
 	}
+
+	return totalSeconds
+}
+
+func GetWarmth(sessions []AttemptSession) (uint8, uint8, uint8) {
+	if len(sessions) == 0 {
+		return 0, 0, 0
+	}
+
+	totalSeconds := GetTotalDuration(sessions)
 
 	if totalSeconds < 60 {
 		return 255, 165, 0 // Orange
@@ -68,4 +75,40 @@ func RGBify(r, g, b uint8, row []string) []string {
 
 	return coloured
 
+}
+
+func FormatDuration(totalSeconds int) string {
+	if totalSeconds == 0 {
+		return "0 seconds"
+	}
+
+	weeks := totalSeconds / (7 * 24 * 3600)
+	totalSeconds %= (7 * 24 * 3600)
+	days := totalSeconds / (24 * 3600)
+	totalSeconds %= (24 * 3600)
+	hours := totalSeconds / 3600
+	totalSeconds %= 3600
+	minutes := totalSeconds / 60
+	totalSeconds %= 60
+	seconds := totalSeconds
+
+	var parts []string
+
+	if weeks > 0 {
+		parts = append(parts, fmt.Sprintf("%d weeks", weeks))
+	}
+	if days > 0 {
+		parts = append(parts, fmt.Sprintf("%d days", days))
+	}
+	if hours > 0 {
+		parts = append(parts, fmt.Sprintf("%d hours", hours))
+	}
+	if minutes > 0 {
+		parts = append(parts, fmt.Sprintf("%d minutes", minutes))
+	}
+	if seconds > 0 {
+		parts = append(parts, fmt.Sprintf("%d seconds", seconds))
+	}
+
+	return strings.Join(parts, " ")
 }
