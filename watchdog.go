@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	sshAttempts = LoadAttempts() 
-	ipToOrigin  = make(IPOrigins)
+	sshAttempts = LoadAttempts()
 )
 
 func GetActivities() (Activities, error) {
@@ -49,13 +48,6 @@ func GetActivities() (Activities, error) {
 		host := strings.Split(ip, ":")[0]
 
 		if host != "" && !slices.Contains(whitelistedIps, host) && !strings.Contains(host, "[") {
-			if _, exists := ipToOrigin[host]; !exists {
-				stat, err := GetCountryOrigin(host)
-				if err == nil {
-					ipToOrigin[host] = stat
-				}
-
-			}
 
 			if !slices.Contains(liveSSHAttempts, host) {
 				liveSSHAttempts = append(liveSSHAttempts, host)
@@ -93,13 +85,22 @@ func GetActivities() (Activities, error) {
 			}
 		}
 		if !exists {
+
+			country := "N/A"
+
+			ipStat, err := GetCountryOrigin(host)
+			if err == nil {
+				country = ipStat.Country
+			}
+
 			sshAttempts = append(sshAttempts, SSHAttempt{
 				IP: host,
 				Sessions: []AttemptSession{
 					{
 						Start: time.Now(),
 					}},
-				Status: LIVE,
+				Country: country,
+				Status:  LIVE,
 			})
 		}
 	}
@@ -114,13 +115,11 @@ func GetActivities() (Activities, error) {
 		return len(sshAttempts[i].Sessions) > len(sshAttempts[j].Sessions)
 	})
 
-
 	SaveAttemts(sshAttempts)
 
 	return Activities{
 		WhitelistedIPs: whitelistedIps,
 		Attempts:       sshAttempts,
-		IPOrigins:      ipToOrigin,
 	}, nil
 
 }

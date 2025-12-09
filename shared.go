@@ -7,8 +7,6 @@ const (
 	STALE = "NIL"
 )
 
-type IPOrigins map[string]IPStat
-
 type AttemptSession struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
@@ -17,13 +15,13 @@ type AttemptSession struct {
 type SSHAttempt struct {
 	IP       string           `json:"ip"`
 	Status   string           `json:"status"`
+	Country  string           `json:"country"`
 	Sessions []AttemptSession `json:"sessions"`
 }
 
 type Activities struct {
-	WhitelistedIPs []string    `json:"whitelistedIPs"`
+	WhitelistedIPs []string     `json:"whitelistedIPs"`
 	Attempts       []SSHAttempt `json:"attempts"`
-	IPOrigins      IPOrigins   `json:"ipOrigins"`
 }
 
 type IPStat struct {

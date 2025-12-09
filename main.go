@@ -48,12 +48,6 @@ func main() {
 
 		for idx, attempt := range activities.Attempts {
 
-			country := "N/A"
-			if origin, ok := activities.IPOrigins[attempt.IP]; ok {
-
-				country = origin.Country
-			}
-
 			fmtedTime := ""
 			if attempt.Status == LIVE {
 
@@ -70,7 +64,7 @@ func main() {
 			sessionsString := fmt.Sprintf("%v attempts (%v)", strconv.Itoa(len(attempt.Sessions)), FormatDuration(GetTotalDuration(attempt.Sessions)))
 
 			tableRow := RGBify(r, g, b, []string{
-				strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, country, sessionsString,
+				strconv.Itoa(idx + 1), attempt.IP, attempt.Status, fmtedTime, attempt.Country, sessionsString,
 			})
 			tableData = append(tableData, tableRow)
 		}
